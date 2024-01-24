@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct EchoApp: App {
+    @EnvironmentObject var messageDatasource: MessageData
     var body: some Scene {
         WindowGroup {
             ContentView()

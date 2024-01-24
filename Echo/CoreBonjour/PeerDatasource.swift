@@ -10,11 +10,13 @@ import SwiftUI
 import Combine
 import MultipeerConnectivity
 
-class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegate, MCNearbyServiceBrowserDelegate, MCNearbyServiceAdvertiserDelegate {
+class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegate, MCNearbyServiceBrowserDelegate,
+                      MCNearbyServiceAdvertiserDelegate {
     
     typealias PublishType = (Data?, Peer?)
     
     let objectWillChange = PassthroughSubject<PublishType,Never>()
+    @StateObject var messageData = MessageData()
     var session: MCSession?
     var peers: [Peer] {
         if let session = self.session {
@@ -45,9 +47,9 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
         self.session?.delegate = self
         
         //Browse
-        self.browser = MCNearbyServiceBrowser(peer: peerIDObject, serviceType:"LocalTalk")
-        self.browser?.delegate = self
-        self.browser?.startBrowsingForPeers()
+//        self.browser = MCNearbyServiceBrowser(peer: peerIDObject, serviceType:"LocalTalk")
+//        self.browser?.delegate = self
+//        self.browser?.startBrowsingForPeers()
         
         //Advertise
         self.advertiser = MCNearbyServiceAdvertiser(peer: peerIDObject, discoveryInfo: nil, serviceType: "LocalTalk")
@@ -115,10 +117,8 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        DispatchQueue.main.async {
-            let delegate = UIApplication.shared.connectedScenes.first?.delegate as! SceneDelegate
-            delegate.datasource.interpretIncoming(data: data)
-        }
+        self.messageData.interpretIncoming(data: data)
+        self.send(message: "Received", to: self.peer(for: peerID)!) // BAD
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {

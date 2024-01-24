@@ -15,6 +15,9 @@ public class MessageData: ObservableObject, Identifiable {
     public var messageData: [Message] = [Message]()
     public var objectWillChange = PassthroughSubject<Void, Never>()
     
+    init() {
+    }
+    
     func addMessage(message: String, sender: MessageSource, name: String) {
         let newMessage = Message(id: Date().hashValue,
                                  content: message,
