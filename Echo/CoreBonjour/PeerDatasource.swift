@@ -27,14 +27,16 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     
     var browser: MCNearbyServiceBrowser?
     var advertiser: MCNearbyServiceAdvertiser?
-    var peerID: String = UUID().uuidString {
+    var peerID: String = "Echo" {
         didSet {
+            print("DEBUG - didSet called")
             self.teardown()
             self.setup()
         }
     }
     
     override init() {
+        print("DEBUG - init called")
         super.init()
         self.setup()
     }
@@ -47,9 +49,9 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
         self.session?.delegate = self
         
         //Browse
-//        self.browser = MCNearbyServiceBrowser(peer: peerIDObject, serviceType:"LocalTalk")
-//        self.browser?.delegate = self
-//        self.browser?.startBrowsingForPeers()
+        self.browser = MCNearbyServiceBrowser(peer: peerIDObject, serviceType:"LocalTalk")
+        self.browser?.delegate = self
+        self.browser?.startBrowsingForPeers()
         
         //Advertise
         self.advertiser = MCNearbyServiceAdvertiser(peer: peerIDObject, discoveryInfo: nil, serviceType: "LocalTalk")
@@ -88,7 +90,7 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     }
     
     func send(message text: String, to peer: Peer) -> Void {
-        let transmissionHash = ["messageSender": peer.displayName,
+        let transmissionHash = ["messageSender": self.peerID,
                                 "messagePayload":text,
                                 "messageTimestamp": Date(),
                                 "messagePeerList":[peer.displayName, self.session?.myPeerID.displayName]] as [String : Any]
@@ -112,11 +114,13 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         DispatchQueue.main.async(execute: {
+            print("DEBUG - Session state changed to \(state.rawValue)")
             self.objectWillChange.send((nil, nil))
         })
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        print("DEBUG - Received data from \(peerID.displayName).")
         self.messageData.interpretIncoming(data: data)
         self.send(message: "Received", to: self.peer(for: peerID)!) // BAD
     }
@@ -137,16 +141,17 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         // TODO: Handle browsing failing to start
-        print("ERROR")
+        print("DEBUG - Browser did not start")
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        print("Found: \(peerID.displayName)")
+        print("DEBUG - Found peer \(peerID.displayName)")
         self.browser?.invitePeer(peerID, to: self.session!, withContext: nil, timeout: 10)
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         DispatchQueue.main.async(execute: {
+            print("DEBUG - Lost peer \(peerID.displayName)")
             self.objectWillChange.send((nil, nil))
         })
     }
@@ -154,6 +159,7 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     //MARK: Advertiser delegate
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        print("DEBUG - invitation recevied from \(peerID.displayName).")
         invitationHandler(true, self.session)
     }
     
