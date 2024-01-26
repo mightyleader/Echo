@@ -57,6 +57,7 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
         self.advertiser = MCNearbyServiceAdvertiser(peer: peerIDObject, discoveryInfo: nil, serviceType: "LocalTalk")
         self.advertiser?.delegate = self
         self.advertiser?.startAdvertisingPeer()
+        self.objectWillChange.send((nil, nil))
     }
     
     func teardown() -> Void {
@@ -68,6 +69,7 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
             }
             self.session = nil
         }
+        self.objectWillChange.send((nil, nil))
     }
     
     private func peerFactory(mcpeers: [MCPeerID]) -> [Peer] {
@@ -142,11 +144,13 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         // TODO: Handle browsing failing to start
         print("DEBUG - Browser did not start")
+        self.objectWillChange.send((nil, nil))
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         print("DEBUG - Found peer \(peerID.displayName)")
         self.browser?.invitePeer(peerID, to: self.session!, withContext: nil, timeout: 10)
+        self.objectWillChange.send((nil, nil))
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
@@ -161,6 +165,11 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         print("DEBUG - invitation recevied from \(peerID.displayName).")
         invitationHandler(true, self.session)
+    }
+    
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        print("DEBUG - Advertiser failed to start.")
+        self.objectWillChange.send((nil, nil))
     }
     
 }
