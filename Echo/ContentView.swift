@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MultipeerConnectivity
 
 struct ContentView: View {
     @ObservedObject var peerDatasource = PeerDatasource()
@@ -15,35 +16,35 @@ struct ContentView: View {
             HStack {
                 Image(systemName: "bonjour")
                     .imageScale(.large)
-                    .foregroundColor(.gray)
+                    .foregroundColor(peerDatasource.sessionState ? .green : .red)
                 .foregroundStyle(.tint)
                 Text("Session running")
             }
             HStack {
                 Image(systemName: "antenna.radiowaves.left.and.right.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(.gray)
+                    .foregroundColor(peerDatasource.advertiserActive ? .green : .red)
                 .foregroundStyle(.tint)
                 Text("Advertising active")
             }
             HStack {
                 Image(systemName: "magnifyingglass.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(.gray)
+                    .foregroundColor(peerDatasource.browserActive ? .green : .red)
                 .foregroundStyle(.tint)
                 Text("Browsing for peers")
             }
             HStack {
                 Image(systemName: "person.crop.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(.gray)
+                    .foregroundColor(peerDatasource.found ? .green : .gray)
                 .foregroundStyle(.tint)
                 Text("Found peers")
             }
             HStack {
                 Image(systemName: "personalhotspot.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(.gray)
+                    .foregroundColor(peerDatasource.connected ? .green : .gray)
                 .foregroundStyle(.tint)
                 Text("Peer connected")
             }

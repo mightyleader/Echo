@@ -20,10 +20,16 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     var session: MCSession?
     var peers: [Peer] {
         if let session = self.session {
+            print("DEBUG - peers array checked.")
             return self.peerFactory(mcpeers: session.connectedPeers)
         }
         return [Peer]()
     }
+    var sessionState =  false
+    var browserActive = false
+    var advertiserActive = false
+    var connected = false
+    var found = false
     
     var browser: MCNearbyServiceBrowser?
     var advertiser: MCNearbyServiceAdvertiser?
@@ -48,15 +54,20 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
         self.session = MCSession(peer: peerIDObject)
         self.session?.delegate = self
         
+        self.sessionState = self.session != nil ? true : false
+        self.objectWillChange.send((nil, nil))
+        
         //Browse
         self.browser = MCNearbyServiceBrowser(peer: peerIDObject, serviceType:"LocalTalk")
         self.browser?.delegate = self
         self.browser?.startBrowsingForPeers()
+        self.browserActive = true
         
         //Advertise
         self.advertiser = MCNearbyServiceAdvertiser(peer: peerIDObject, discoveryInfo: nil, serviceType: "LocalTalk")
         self.advertiser?.delegate = self
         self.advertiser?.startAdvertisingPeer()
+        self.advertiserActive = true
         self.objectWillChange.send((nil, nil))
     }
     
@@ -68,11 +79,13 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
                 browser.stopBrowsingForPeers()
             }
             self.session = nil
+            self.sessionState = false
         }
         self.objectWillChange.send((nil, nil))
     }
     
     private func peerFactory(mcpeers: [MCPeerID]) -> [Peer] {
+        print("DEBUG - peers factory called.")
         return mcpeers.map { mcpeer in
                 Peer(id: mcpeer.hash, displayName: mcpeer.displayName, connected: true)
             }
@@ -144,18 +157,21 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         // TODO: Handle browsing failing to start
         print("DEBUG - Browser did not start")
+        self.browserActive = false
         self.objectWillChange.send((nil, nil))
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         print("DEBUG - Found peer \(peerID.displayName)")
         self.browser?.invitePeer(peerID, to: self.session!, withContext: nil, timeout: 10)
+        self.found = true
         self.objectWillChange.send((nil, nil))
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         DispatchQueue.main.async(execute: {
             print("DEBUG - Lost peer \(peerID.displayName)")
+            self.found = false
             self.objectWillChange.send((nil, nil))
         })
     }
@@ -164,11 +180,14 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         print("DEBUG - invitation recevied from \(peerID.displayName).")
+        self.connected = true
+        self.objectWillChange.send((nil, nil))
         invitationHandler(true, self.session)
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
         print("DEBUG - Advertiser failed to start.")
+        self.advertiserActive = false
         self.objectWillChange.send((nil, nil))
     }
     
