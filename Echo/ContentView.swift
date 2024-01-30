@@ -41,13 +41,6 @@ struct ContentView: View {
                 .foregroundStyle(.tint)
                 Text("Found peers")
             }
-            HStack {
-                Image(systemName: "personalhotspot.circle.fill")
-                    .imageScale(.large)
-                    .foregroundColor(peerDatasource.connected ? .green : .gray)
-                .foregroundStyle(.tint)
-                Text("Peer connected")
-            }
         }
         .padding()
 
