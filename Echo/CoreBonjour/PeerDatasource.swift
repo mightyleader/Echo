@@ -187,6 +187,9 @@ class PeerDatasource: NSObject, ObservableObject, Identifiable, MCSessionDelegat
             self.objectWillChange.send((nil, nil))
             invitationHandler(true, self.session)
         }
+        else {
+            invitationHandler(false, nil)
+        }
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
