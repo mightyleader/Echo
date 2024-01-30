@@ -16,28 +16,28 @@ struct ContentView: View {
             HStack {
                 Image(systemName: "bonjour")
                     .imageScale(.large)
-                    .foregroundColor(peerDatasource.sessionState ? .green : .red)
+                    .foregroundColor(peerDatasource.sessionState ? .orange : .gray)
                 .foregroundStyle(.tint)
                 Text("Session running")
             }
             HStack {
                 Image(systemName: "antenna.radiowaves.left.and.right.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(peerDatasource.advertiserActive ? .green : .red)
+                    .foregroundColor(peerDatasource.advertiserActive ? .orange : .gray)
                 .foregroundStyle(.tint)
                 Text("Advertising active")
             }
             HStack {
                 Image(systemName: "magnifyingglass.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(peerDatasource.browserActive ? .green : .red)
+                    .foregroundColor(peerDatasource.browserActive ? .orange : .gray)
                 .foregroundStyle(.tint)
                 Text("Browsing for peers")
             }
             HStack {
                 Image(systemName: "person.crop.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(peerDatasource.found ? .green : .gray)
+                    .foregroundColor(peerDatasource.found ? .orange : .gray)
                 .foregroundStyle(.tint)
                 Text("Found peers")
             }
